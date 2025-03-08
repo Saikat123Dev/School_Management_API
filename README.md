@@ -2,23 +2,46 @@
 
 ## Overview
 
-The School Management API is a RESTful service built with Node.js, Express, and MySQL. It manages school data and provides functionality to add schools and retrieve them based on proximity to a specified location.
+The School Management API is a RESTful service built with Node.js, Express, and MySQL. It provides functionality to manage school data and perform proximity-based searches, allowing users to find schools near specific coordinates.
 
 ## Table of Contents
 
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Database Setup](#database-setup)
-- [API Documentation](#api-documentation)
-- [Edge Cases & Protections](#edge-cases--protections)
-- [Security Features](#security-features)
-- [Key Implementation Details](#key-implementation-details)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Error Handling](#error-handling)
-- [Future Enhancements](#future-enhancements)
+- [School Management API](#school-management-api)
+  - [Overview](#overview)
+  - [Table of Contents](#table-of-contents)
+  - [Architecture](#architecture)
+    - [Architectural Layers](#architectural-layers)
+    - [Data Flow](#data-flow)
+  - [Technology Stack](#technology-stack)
+  - [Project Structure](#project-structure)
+  - [Installation](#installation)
+  - [Database Setup](#database-setup)
+  - [API Documentation](#api-documentation)
+    - [1. Add School](#1-add-school)
+    - [2. List Schools by Proximity](#2-list-schools-by-proximity)
+  - [Sample Payloads and Responses](#sample-payloads-and-responses)
+    - [Add School Endpoint](#add-school-endpoint)
+      - [Valid School Data](#valid-school-data)
+      - [Missing Required Field](#missing-required-field)
+      - [Invalid Latitude](#invalid-latitude)
+      - [SQL Injection Attempt](#sql-injection-attempt)
+    - [List Schools Endpoint](#list-schools-endpoint)
+      - [Valid Request](#valid-request)
+      - [Invalid Latitude](#invalid-latitude-1)
+      - [SQL Injection in Query Parameters](#sql-injection-in-query-parameters)
+  - [Postman Collection](#postman-collection)
+    - [Collection Structure](#collection-structure)
+    - [Example Test Script](#example-test-script)
+  - [Security Features](#security-features)
+    - [1. SQL Injection Protection](#1-sql-injection-protection)
+    - [2. Input Validation \& Sanitization](#2-input-validation--sanitization)
+    - [3. Security Headers](#3-security-headers)
+    - [4. Rate Limiting](#4-rate-limiting)
+  - [Testing](#testing)
+    - [Run Tests](#run-tests)
+    - [Example Test](#example-test)
+    - [Cloud Deployment](#cloud-deployment)
+  - [Error Handling](#error-handling)
 
 ## Architecture
 
@@ -46,13 +69,6 @@ This project follows a repository pattern architecture to ensure separation of c
    - Distance calculator: Location-based calculations
    - Rate limiters: Prevent API abuse
 
-### Design Principles
-
-- **Single Responsibility Principle**: Each module has one responsibility
-- **Dependency Injection**: Dependencies are passed to modules rather than created within them
-- **Separation of Concerns**: Clear boundaries between different parts of the application
-- **Error Handling**: Comprehensive error handling at each level
-
 ### Data Flow
 
 ```
@@ -65,6 +81,8 @@ Client Request → Routes → Controllers → Services → Repositories → Data
                                    Error Handlers)
 ```
 
+
+
 ## Technology Stack
 
 - **Node.js**: JavaScript runtime environment
@@ -72,10 +90,11 @@ Client Request → Routes → Controllers → Services → Repositories → Data
 - **MySQL**: Relational database for persistent storage
 - **MySQL2**: MySQL client for Node.js with Promise support
 - **Express Rate Limit**: Rate limiting middleware
+- **Helmet**: Security headers middleware
+- **CORS**: Cross-Origin Resource Sharing middleware
 - **Mocha/Chai**: Testing framework
 - **SuperTest**: HTTP assertion library for API testing
 - **Dotenv**: Environment variable management
-- **CORS**: Cross-Origin Resource Sharing middleware
 
 ## Project Structure
 
@@ -115,6 +134,7 @@ Client Request → Routes → Controllers → Services → Repositories → Data
 └── README.md             # Project documentation
 ```
 
+
 ## Installation
 
 1. **Clone the repository**
@@ -136,6 +156,7 @@ Client Request → Routes → Controllers → Services → Repositories → Data
    DB_USER=yourusername
    DB_PASSWORD=yourpassword
    DB_NAME=school_management
+   DB_PORT=3306
    DB_CONNECTION_LIMIT=10
    ```
 
@@ -155,6 +176,7 @@ The application automatically sets up the required database structure on startup
 
 1. Creates the database if it doesn't exist
 2. Creates the schools table with the following schema:
+
 
 ```sql
 CREATE TABLE IF NOT EXISTS schools (
@@ -182,8 +204,8 @@ Adds a new school to the database.
 - **Request Body:**
   ```json
   {
-    "name": "School Name",
-    "address": "123 School Street, City, State",
+    "name": "Example School",
+    "address": "123 Education Street, City, State",
     "latitude": 40.7128,
     "longitude": -74.0060
   }
@@ -195,8 +217,8 @@ Adds a new school to the database.
     "message": "School added successfully",
     "data": {
       "id": 1,
-      "name": "School Name",
-      "address": "123 School Street, City, State",
+      "name": "Example School",
+      "address": "123 Education Street, City, State",
       "latitude": 40.7128,
       "longitude": -74.0060
     }
@@ -208,22 +230,6 @@ Adds a new school to the database.
     "success": false,
     "message": "Validation failed",
     "errors": ["School name is required"]
-  }
-  ```
-- **Response (429 Too Many Requests):**
-  ```json
-  {
-    "success": false,
-    "message": "Too many write operations, please try again later.",
-    "errors": ["Rate limit exceeded for write operations"]
-  }
-  ```
-- **Response (500 Server Error):**
-  ```json
-  {
-    "success": false,
-    "message": "Database error",
-    "errors": ["Error creating school: Database connection failed"]
   }
   ```
 
@@ -247,18 +253,18 @@ Retrieves all schools sorted by distance from the specified coordinates with pag
       "schools": [
         {
           "id": 1,
-          "name": "School A",
-          "address": "Address A",
+          "name": "Example School",
+          "address": "123 Education Street, City, State",
           "latitude": 40.7128,
           "longitude": -74.0060,
           "created_at": "2023-03-07T10:20:30.000Z",
           "updated_at": "2023-03-07T10:20:30.000Z",
-          "distance": 1.2
+          "distance": 0.0
         },
         {
           "id": 2,
-          "name": "School B",
-          "address": "Address B",
+          "name": "Another School",
+          "address": "456 Learning Avenue, City, State",
           "latitude": 40.8128,
           "longitude": -74.1060,
           "created_at": "2023-03-07T11:30:45.000Z",
@@ -275,74 +281,203 @@ Retrieves all schools sorted by distance from the specified coordinates with pag
     }
   }
   ```
-- **Response (400 Bad Request):**
+
+## Sample Payloads and Responses
+
+### Add School Endpoint
+
+#### Valid School Data
+- **Payload**:
+  ```json
+  {
+    "name": "Lincoln High School",
+    "address": "123 Education Boulevard, New York, NY 10001",
+    "latitude": 40.7128,
+    "longitude": -74.0060
+  }
+  ```
+- **Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "School added successfully",
+    "data": {
+      "id": 1,
+      "name": "Lincoln High School",
+      "address": "123 Education Boulevard, New York, NY 10001",
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    }
+  }
+  ```
+
+#### Missing Required Field
+- **Payload**:
+  ```json
+  {
+    "address": "789 Knowledge Road, Chicago, IL 60601",
+    "latitude": 41.8781,
+    "longitude": -87.6298
+  }
+  ```
+- **Response (400 Bad Request)**:
   ```json
   {
     "success": false,
     "message": "Validation failed",
-    "errors": ["Invalid latitude value"]
+    "errors": ["Name is required and must be a non-empty string"]
   }
   ```
-- **Response (429 Too Many Requests):**
+
+#### Invalid Latitude
+- **Payload**:
+  ```json
+  {
+    "name": "Extreme North Academy",
+    "address": "1 Polar Circle, North Pole",
+    "latitude": 91.5,
+    "longitude": -74.0060
+  }
+  ```
+- **Response (400 Bad Request)**:
   ```json
   {
     "success": false,
-    "message": "Too many requests, please try again later.",
-    "errors": ["Rate limit exceeded"]
+    "message": "Validation failed",
+    "errors": ["Latitude must be between -90 and 90"]
   }
   ```
-- **Response (500 Server Error):**
+
+#### SQL Injection Attempt
+- **Payload**:
+  ```json
+  {
+    "name": "School'; DROP TABLE schools; --",
+    "address": "123 Test Street",
+    "latitude": 40.7128,
+    "longitude": -74.0060
+  }
+  ```
+- **Response (400 Bad Request)**:
   ```json
   {
     "success": false,
-    "message": "Database error",
-    "errors": ["Error retrieving schools: Database query failed"]
+    "message": "Validation failed",
+    "errors": ["School name contains invalid characters or potentially harmful content"]
   }
   ```
 
-### 3. Welcome Endpoint
+### List Schools Endpoint
 
-Simple endpoint to verify the API is running.
-
-- **Endpoint:** `/`
-- **Method:** GET
-- **Response (200 OK):**
+#### Valid Request
+- **Request**:
+  ```
+  GET /api/listSchools?latitude=40.7128&longitude=-74.0060&page=1&limit=10
+  ```
+- **Response (200 OK)**:
   ```json
   {
-    "message": "Welcome to School Management System API"
+    "success": true,
+    "data": {
+      "schools": [
+        {
+          "id": 1,
+          "name": "Lincoln High School",
+          "address": "123 Education Boulevard, New York, NY 10001",
+          "latitude": 40.7128,
+          "longitude": -74.0060,
+          "created_at": "2023-06-15T14:30:45.000Z",
+          "updated_at": "2023-06-15T14:30:45.000Z",
+          "distance": 0.0
+        },
+        {
+          "id": 3,
+          "name": "Midtown Middle School",
+          "address": "789 Academic Avenue, New York, NY 10016",
+          "latitude": 40.7500,
+          "longitude": -73.9800,
+          "created_at": "2023-06-15T15:45:22.000Z",
+          "updated_at": "2023-06-15T15:45:22.000Z",
+          "distance": 2.3
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 2,
+        "totalPages": 1
+      }
+    }
   }
   ```
 
-## Edge Cases & Protections
+#### Invalid Latitude
+- **Request**:
+  ```
+  GET /api/listSchools?latitude=invalid&longitude=-74.0060
+  ```
+- **Response (400 Bad Request)**:
+  ```json
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": ["Latitude is required and must be a valid number"]
+  }
+  ```
 
-The API has been hardened against various edge cases:
+#### SQL Injection in Query Parameters
+- **Request**:
+  ```
+  GET /api/listSchools?latitude=40.7128' OR '1'='1&longitude=-74.0060
+  ```
+- **Response (400 Bad Request)**:
+  ```json
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": ["Potential SQL injection detected in parameter: latitude"]
+  }
+  ```
 
-### 1. Input Validation & Sanitization
+## Postman Collection
 
-- **XSS Protection**: All text inputs are sanitized to prevent cross-site scripting attacks
-- **Coordinate Validation**: Validates that latitude (-90 to 90) and longitude (-180 to 180) are within valid ranges
-- **Required Fields**: Ensures all required fields are present
+The API includes a comprehensive Postman collection for testing and exploration. Import the `School Management API.postman_collection.json` file into Postman to access the following:
 
-### 2. Distance Calculation
+### Collection Structure
 
-- **International Date Line**: The distance calculation handles cases where schools are on opposite sides of the international date line
-- **Antipodal Points**: Correctly calculates distances between points on opposite sides of the Earth
+1. **Schools**
+   - Add School: Create a new school entry
+   - List Schools: Retrieve schools sorted by proximity
 
-### 3. Pagination
+2. **Tests**
+   - SQL Injection Tests: Verify protection against SQL injection attacks
+   - XSS Test: Verify protection against cross-site scripting
+   - Invalid Coordinates Test: Verify validation of geographic coordinates
+   - Pagination Test: Verify pagination functionality
 
-- **Large Result Sets**: Implements pagination to handle large numbers of schools
-- **Maximum Limit**: Caps the maximum number of results to prevent performance issues
+### Example Test Script
 
-### 4. Error Handling & Recovery
+The collection includes automated tests to verify API behavior:
 
-- **Database Connection Retry**: Automatically retries failed database operations for transient errors
-- **Exponential Backoff**: Uses exponential backoff strategy for retries
-- **Detailed Error Messages**: Provides descriptive error messages for troubleshooting
-
-### 5. Rate Limiting
-
-- **General API Limit**: 100 requests per 15 minutes per IP
-- **Write Operations Limit**: 20 requests per hour per IP for school creation
+```javascript
+/ Test for adding a school
+pm.test("Status code is 201", function () {
+pm.response.to.have.status(201);
+});
+pm.test("Response has correct structure", function () {
+const responseJson = pm.response.json();
+pm.expect(responseJson.success).to.be.true;
+pm.expect(responseJson.data).to.have.property("id");
+pm.expect(responseJson.data).to.have.property("name");
+pm.expect(responseJson.data).to.have.property("address");
+pm.expect(responseJson.data).to.have.property("latitude");
+pm.expect(responseJson.data).to.have.property("longitude");
+});
+// Store the school ID for future requests
+if (pm.response.json().data && pm.response.json().data.id) {
+pm.environment.set("schoolId", pm.response.json().data.id);
+}
+```
 
 ## Security Features
 
@@ -350,157 +485,79 @@ The API implements multiple layers of security to protect against various attack
 
 ### 1. SQL Injection Protection
 
-- **Advanced Pattern Detection**: Comprehensive detection of SQL injection patterns including:
-  - Union-based attacks
-  - Time-based blind injections
-  - Batch queries
-  - Comment-based attacks
-  - Unicode evasion techniques
-  - Hex encoding attacks
-- **Query Parameter Protection**: All query parameters are validated against SQL injection patterns
-- **Request Body Protection**: Deep inspection of request body for SQL injection attempts
+- **Pattern Detection**: Comprehensive detection of SQL injection patterns
 - **Prepared Statements**: All database queries use parameterized queries
+- **Input Validation**: All inputs are validated against SQL injection patterns
+
+Example from `middleware/sqlInjectionProtection.js`:
+```javascript
+const SQL_INJECTION_PATTERNS = [
+/(\%27)|(\')|(\-\-)|(\%23)|(#)/i,
+/(\%3B)|(;)/i,
+/(union).?(select|all)/i,
+/(select|update|insert|delete|drop|alter|create|truncate)/i
+// Additional patterns...
+];
+function containsSqlInjection(str) {
+if (!str || typeof str !== 'string') return false;
+return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(str));
+}
+```
+
 
 ### 2. Input Validation & Sanitization
 
 - **XSS Protection**: All text inputs are sanitized to prevent cross-site scripting attacks
 - **Coordinate Validation**: Validates that latitude (-90 to 90) and longitude (-180 to 180) are within valid ranges
-- **School Name Validation**: Checks for potentially malicious content in school names
-- **Required Fields**: Ensures all required fields are present
-- **Character Escaping**: Special characters are properly escaped
+
+Example from `utils/validator.js`:
+
+```javascript
+function isValidLatitude(lat) {
+return !isNaN(lat) && lat > -90 && lat < 90;
+}
+function isValidLongitude(lng) {
+return !isNaN(lng) && lng > -180 && lng < 180;
+}
+```
 
 ### 3. Security Headers
 
 - **Helmet Integration**: Adds various HTTP headers to enhance security
 - **Content Security Policy**: Restricts which resources can be loaded
-- **X-Frame-Options**: Prevents clickjacking attacks
-- **X-Content-Type-Options**: Prevents MIME type sniffing
-- **X-XSS-Protection**: Enables browser's XSS filtering capabilities
+
+Example from `app.js`:
+
+```javascript
+app.use(helmet());
+app.use((req, res, next) => {
+res.setHeader('X-Frame-Options', 'DENY');
+res.setHeader('X-Content-Type-Options', 'nosniff');
+res.setHeader('X-XSS-Protection', '1; mode=block');
+// Additional headers...
+next();
+});
+```
 
 ### 4. Rate Limiting
 
 - **General API Limit**: 100 requests per 15 minutes per IP
 - **Write Operations Limit**: 20 requests per hour per IP for school creation
-- **Custom Error Messages**: Clear feedback when limits are exceeded
 
-### 5. Database Security
-
-- **Parameter Sanitization**: All database parameters are sanitized before use
-- **Identifier Escaping**: Table and column names are escaped to prevent SQL injection
-- **Connection Pooling**: Managed database connections to prevent resource exhaustion
-- **Error Masking**: Database errors are abstracted to prevent information leakage
-
-### 6. Layered Defense
-
-- **Multiple Validation Layers**: Validation occurs at middleware, service, and repository levels
-- **Defense in Depth**: Multiple security mechanisms to ensure that if one fails, others will still protect the application
-
-## Key Implementation Details
-
-### Repository Pattern
-
-The application uses the repository pattern to abstract database operations:
+Example from `middleware/rateLimit.js`:
 
 ```javascript
-// repositories/schoolRepository.js
-function createSchoolRepository() {
-  return {
-    async create(schoolData) {
-      // Implementation to add school to database
-    },
-
-    async findAll() {
-      // Implementation to retrieve all schools
-    },
-
-    async findAllPaginated(page, limit) {
-      // Implementation to retrieve schools with pagination
-    }
-  };
+const writeApiLimiter = rateLimit({
+windowMs: 60 60 1000, // 1 hour
+max: 20,
+standardHeaders: true,
+legacyHeaders: false,
+message: {
+success: false,
+message: 'Too many write operations, please try again later.',
+errors: ['Rate limit exceeded for write operations']
 }
-```
-
-### Service Layer
-
-The service layer contains business logic and coordinates operations:
-
-```javascript
-// services/schoolService.js
-function createSchoolService(schoolRepository) {
-  return {
-    async addSchool(schoolData) {
-      // Validate and process school data
-      return schoolRepository.create(schoolData);
-    },
-
-    async listSchoolsByDistance(latitude, longitude, page, limit) {
-      // Get schools and calculate distances with pagination
-    }
-  };
-}
-```
-
-### Distance Calculation
-
-The application implements an enhanced Haversine formula to calculate the great-circle distance between two points on the Earth's surface, with special handling for the international date line:
-
-```javascript
-function calculateShortestDistance(lat1, lon1, lat2, lon2) {
-  // Normalize longitudes to handle international date line
-  let lon1Normalized = lon1;
-  let lon2Normalized = lon2;
-
-  // Check if the points are on opposite sides of the international date line
-  if (Math.abs(lon1 - lon2) > 180) {
-    // Adjust the longitudes to calculate the shortest path
-    if (lon1 < 0) {
-      lon1Normalized = lon1 + 360;
-    } else {
-      lon2Normalized = lon2 + 360;
-    }
-  }
-
-  return calculateDistance(lat1, lon1Normalized, lat2, lon2Normalized);
-}
-```
-
-### Input Sanitization
-
-The application sanitizes text inputs to prevent XSS attacks:
-
-```javascript
-function sanitizeInput(str) {
-  if (!str) return str;
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-```
-
-### Error Handling
-
-The application implements a centralized error handling system with custom error classes and automatic retries:
-
-```javascript
-// Automatic retry for transient database errors
-async function operationWithRetry(operation) {
-  let retries = 0;
-  while (retries < MAX_DB_RETRIES) {
-    try {
-      return await operation();
-    } catch (error) {
-      if (error instanceof DatabaseError && retries < MAX_DB_RETRIES - 1 && isTransientError(error)) {
-        retries++;
-        await sleep(200 * retries); // Exponential backoff
-        continue;
-      }
-      throw error;
-    }
-  }
-}
+});
 ```
 
 ## Testing
@@ -510,76 +567,71 @@ The project includes both unit and integration tests:
 ### Run Tests
 
 ```bash
-# Run all tests
+
+bash
+Run all tests
 npm test
-
-# Run only unit tests
+Run only unit tests
 npm run test:unit
-
-# Run only integration tests
+Run only integration tests
 npm run test:integration
 ```
 
-### Test Structure
+### Example Test
 
-1. **Unit Tests**
-   - Test individual components in isolation
-   - Focus on services, repositories, and utility functions
+Unit test for distance calculation:
 
-2. **Integration Tests**
-   - Test API endpoints with the full application stack
-   - Verify database operations
-   - Check HTTP responses
+```javascript
+const { expect } = require('chai');
+const DistanceCalculator = require('../../utils/distanceCalculator');
+describe('Distance Calculator', () => {
+it('should calculate distance between two points correctly', () => {
+const distance = DistanceCalculator.calculateDistance(40.7128, -74.0060, 34.0522, -118.2437);
+expect(distance).to.be.within(3930, 3950);
+});
+it('should return 0 for the same coordinates', () => {
+const distance = DistanceCalculator.calculateDistance(40.7128, -74.0060, 40.7128, -74.0060);
+expect(distance).to.equal(0);
+});
+});
+```
 
-### Database for Testing
+### Cloud Deployment
 
-For integration tests, the application uses a test database that is initialized before tests run and cleaned up afterward.
+The application can be deployed to various cloud platforms:
 
-## Deployment
+1. **AWS Elastic Beanstalk**
+   - Upload the application as a ZIP file
+   - Configure environment variables in the Elastic Beanstalk console
 
-The API can be deployed to various hosting services:
-
-### Deployment Options
-
-1. **Traditional Hosting**
-   - Set up a Node.js environment
-   - Install MySQL
-   - Clone the repository
-   - Configure environment variables
-   - Run with PM2 or similar process manager
-
-2. **Docker Deployment**
-   Create a Dockerfile:
-   ```dockerfile
-   FROM node:14
-   WORKDIR /app
-   COPY package*.json ./
-   RUN npm install
-   COPY . .
-   EXPOSE 3000
-   CMD ["npm", "start"]
+2. **Heroku**
+   ```bash
+   heroku create
+   git push heroku main
+   heroku config:set DB_HOST=your-db-host DB_USER=your-db-user ...
    ```
 
-3. **Cloud Hosting**
-   - AWS Elastic Beanstalk
-   - Heroku
-   - Digital Ocean App Platform
+3. **Digital Ocean App Platform**
+   - Connect your GitHub repository
+   - Configure environment variables
+   - Select the appropriate Node.js version
 
-## Monitoring and Logging
+## Error Handling
 
-For production environments, consider adding:
+The application implements a centralized error handling system with custom error classes:
 
-1. **Logging**: Winston or Bunyan for structured logging
-2. **Performance Monitoring**: New Relic or Datadog
-3. **Error Tracking**: Sentry
-
-## Future Enhancements
-
-1. **Authentication**: JWT-based user authentication
-2. **Authorization**: Role-based access control
-3. **API Documentation**: Swagger/OpenAPI integration
-4. **Caching**: Redis for frequently requested data
-5. **Full-Text Search**: For searching schools by name or address
-6. **Geo-Fencing**: Define school catchment areas
-7. **Webhooks**: For notifications on data changes
-8. **Background Processing**: For long-running tasks
+```javascript
+// middleware/errorHandler.js
+function errorHandler(err, req, res, next) {
+if (err instanceof ValidationError) {
+return res.status(400).json(failure('Validation failed', err.errors));
+}
+if (err instanceof DatabaseError) {
+return res.status(500).json(failure('Database error', [err.message]));
+}
+if (err instanceof NotFoundError) {
+return res.status(404).json(failure(err.message));
+}
+return res.status(500).json(failure('Internal server error'));
+}
+```
