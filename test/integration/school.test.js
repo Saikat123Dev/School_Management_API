@@ -1,0 +1,91 @@
+const request = require('supertest');
+const { expect } = require('chai');
+const app = require('../../app');
+const { pool, initializeDatabase } = require('../../config/db.config');
+
+describe('School API Integration Tests', () => {
+  before(async () => {
+    await initializeDatabase();
+  });
+
+  beforeEach(async () => {
+    await pool.query('DELETE FROM schools');
+  });
+
+  describe('POST /api/addSchool', () => {
+    it('should add a new school with valid data', async () => {
+      const schoolData = {
+        name: 'Integration Test School',
+        address: '123 Test Avenue',
+        latitude: 40.7128,
+        longitude: -74.0060
+      };
+
+      const res = await request(app)
+        .post('/api/addSchool')
+        .send(schoolData);
+
+      expect(res.status).to.equal(201);
+      expect(res.body.success).to.be.true;
+      expect(res.body.data).to.have.property('id');
+      expect(res.body.data.name).to.equal(schoolData.name);
+    });
+
+    it('should return validation errors with invalid data', async () => {
+      const invalidData = {
+        name: '',
+        address: '123 Test Avenue',
+        latitude: 40.7128,
+        longitude: -74.0060
+      };
+
+      const res = await request(app)
+        .post('/api/addSchool')
+        .send(invalidData);
+
+      expect(res.status).to.equal(400);
+      expect(res.body.success).to.be.false;
+      expect(res.body.errors).to.be.an('array').that.is.not.empty;
+    });
+  });
+
+  describe('GET /api/listSchools', () => {
+    beforeEach(async () => {
+      // Add test schools
+      await pool.query(`
+        INSERT INTO schools (name, address, latitude, longitude)
+        VALUES
+        ('School A', 'Address A', 40.7128, -74.0060),
+        ('School B', 'Address B', 34.0522, -118.2437)
+      `);
+    });
+
+    it('should list schools sorted by distance', async () => {
+      const res = await request(app)
+        .get('/api/listSchools')
+        .query({ latitude: 40.7, longitude: -74.0 });
+
+      expect(res.status).to.equal(200);
+      expect(res.body.success).to.be.true;
+      expect(res.body.data).to.be.an('array').with.lengthOf(2);
+
+      expect(res.body.data[0].name).to.equal('School A');
+      expect(res.body.data[0].distance).to.be.lessThan(res.body.data[1].distance);
+    });
+
+    it('should return validation errors with invalid coordinates', async () => {
+      const res = await request(app)
+        .get('/api/listSchools')
+        .query({ latitude: 'invalid', longitude: -74.0 });
+
+      expect(res.status).to.equal(400);
+      expect(res.body.success).to.be.false;
+      expect(res.body.errors).to.be.an('array').that.is.not.empty;
+    });
+  });
+
+  after(async () => {
+    await pool.query('DELETE FROM schools');
+    await pool.end();
+  });
+});
