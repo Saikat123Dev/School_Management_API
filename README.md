@@ -448,6 +448,9 @@ Retrieves all schools sorted by distance from the specified coordinates with pag
 
 The API includes a comprehensive Postman collection for testing and exploration. Import the `School Management API.postman_collection.json` file into Postman to access the following:
 
+**Access the shared Postman collection here:**
+[https://www.postman.com/school-management-api-4942/workspace/school-management-api/request/31369410-941a1c48-90cd-4b35-96c5-f718e67d28e4?action=share&creator=31369410&ctx=documentation](https://www.postman.com/school-management-api-4942/workspace/school-management-api/request/31369410-941a1c48-90cd-4b35-96c5-f718e67d28e4?action=share&creator=31369410&ctx=documentation)
+
 ### Collection Structure
 
 1. **Schools**
@@ -489,6 +492,7 @@ if (pm.response.json().data && pm.response.json().data.id) {
 1. **Download the Postman Collection**
    - The collection is available in the `postman` directory of this repository
    - Download the `School_Management_API.postman_collection.json` file
+   - Alternatively, access the shared collection using the link above
 
 2. **Import into Postman**
    - Open Postman
