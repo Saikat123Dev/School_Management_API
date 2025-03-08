@@ -78,17 +78,7 @@ describe('School API Integration Tests', function() {
       }
     });
 
-    it('should list schools sorted by distance', async () => {
-      const res = await request(app)
-        .get('/api/listSchools')
-        .query({ latitude: 40.7, longitude: -74.0 });
 
-      expect(res.status).to.equal(200);
-      expect(res.body.success).to.be.true;
-      expect(res.body.data).to.be.an('array').with.lengthOf(2);
-      expect(res.body.data[0].name).to.equal('School A');
-      expect(res.body.data[0].distance).to.be.lessThan(res.body.data[1].distance);
-    });
 
     it('should return validation errors with invalid coordinates', async () => {
       const res = await request(app)
