@@ -5,6 +5,7 @@ const dbConfig = {
   host: environment.database.host,
   user: environment.database.user,
   password: environment.database.password,
+  port: environment.database.port,
   database: environment.database.name,
   connectionLimit: environment.database.connectionLimit
 };
@@ -12,6 +13,7 @@ const dbConfig = {
 async function initializeDatabase() {
   const connection = await mysql.createConnection({
     host: dbConfig.host,
+    port: dbConfig.port,
     user: dbConfig.user,
     password: dbConfig.password
   });
