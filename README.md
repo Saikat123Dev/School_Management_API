@@ -32,6 +32,7 @@ The School Management API is a RESTful service built with Node.js, Express, and 
   - [Postman Collection](#postman-collection)
     - [Collection Structure](#collection-structure)
     - [Example Test Script](#example-test-script)
+    - [Importing and Using the Postman Collection](#importing-and-using-the-postman-collection)
   - [Security Features](#security-features)
     - [1. SQL Injection Protection](#1-sql-injection-protection)
     - [2. Input Validation \& Sanitization](#2-input-validation--sanitization)
@@ -40,8 +41,10 @@ The School Management API is a RESTful service built with Node.js, Express, and 
   - [Testing](#testing)
     - [Run Tests](#run-tests)
     - [Example Test](#example-test)
-    - [Cloud Deployment](#cloud-deployment)
+  - [Deployment](#deployment)
+    - [Deploying to Render](#deploying-to-render)
   - [Error Handling](#error-handling)
+  - [Conclusion](#conclusion)
 
 ## Architecture
 
@@ -131,6 +134,8 @@ Client Request → Routes → Controllers → Services → Repositories → Data
 ├── server.js             # Server entry point
 ├── package.json          # Project metadata and dependencies
 ├── .env                  # Environment variables
+├── postman/              # Postman collection files
+│   └── School_Management_API.postman_collection.json
 └── README.md             # Project documentation
 ```
 
@@ -139,8 +144,8 @@ Client Request → Routes → Controllers → Services → Repositories → Data
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/school-management-api.git
-   cd school-management-api
+   git clone https://github.com/Saikat123Dev/School_Management_API.git
+   cd School_Management_API
    ```
 
 2. **Install dependencies**
@@ -460,24 +465,59 @@ The API includes a comprehensive Postman collection for testing and exploration.
 The collection includes automated tests to verify API behavior:
 
 ```javascript
-/ Test for adding a school
+// Test for adding a school
 pm.test("Status code is 201", function () {
-pm.response.to.have.status(201);
+  pm.response.to.have.status(201);
 });
 pm.test("Response has correct structure", function () {
-const responseJson = pm.response.json();
-pm.expect(responseJson.success).to.be.true;
-pm.expect(responseJson.data).to.have.property("id");
-pm.expect(responseJson.data).to.have.property("name");
-pm.expect(responseJson.data).to.have.property("address");
-pm.expect(responseJson.data).to.have.property("latitude");
-pm.expect(responseJson.data).to.have.property("longitude");
+  const responseJson = pm.response.json();
+  pm.expect(responseJson.success).to.be.true;
+  pm.expect(responseJson.data).to.have.property("id");
+  pm.expect(responseJson.data).to.have.property("name");
+  pm.expect(responseJson.data).to.have.property("address");
+  pm.expect(responseJson.data).to.have.property("latitude");
+  pm.expect(responseJson.data).to.have.property("longitude");
 });
 // Store the school ID for future requests
 if (pm.response.json().data && pm.response.json().data.id) {
-pm.environment.set("schoolId", pm.response.json().data.id);
+  pm.environment.set("schoolId", pm.response.json().data.id);
 }
 ```
+
+### Importing and Using the Postman Collection
+
+1. **Download the Postman Collection**
+   - The collection is available in the `postman` directory of this repository
+   - Download the `School_Management_API.postman_collection.json` file
+
+2. **Import into Postman**
+   - Open Postman
+   - Click on "Import" in the top left corner
+   - Drag and drop the collection file or browse to select it
+   - Click "Import" to complete the process
+
+3. **Configure Environment**
+   - Create a new environment in Postman by clicking on the gear icon in the top right
+   - Click "Add" to create a new environment
+   - Name it (e.g., "School API - Render")
+   - Add the following variables:
+     - `baseUrl`: Your Render deployment URL (e.g., `https://school-management-api-m643.onrender.com`)
+     - `schoolId`: Leave this blank (it will be populated automatically by tests)
+   - Click "Save"
+   - Select your environment from the dropdown in the top right corner
+
+4. **Run the Tests**
+   - Expand the collection in the left sidebar
+   - You can run individual requests or use the Collection Runner to run all tests
+   - To use the Collection Runner:
+     - Click "..." next to the collection name
+     - Select "Run collection"
+     - Select which requests to run
+     - Click "Run"
+
+5. **View Test Results**
+   - After running a request, check the "Tests" tab to see the results
+   - For the Collection Runner, results will be displayed after all tests complete
 
 ## Security Features
 
@@ -492,18 +532,17 @@ The API implements multiple layers of security to protect against various attack
 Example from `middleware/sqlInjectionProtection.js`:
 ```javascript
 const SQL_INJECTION_PATTERNS = [
-/(\%27)|(\')|(\-\-)|(\%23)|(#)/i,
-/(\%3B)|(;)/i,
-/(union).?(select|all)/i,
-/(select|update|insert|delete|drop|alter|create|truncate)/i
-// Additional patterns...
+  /(\%27)|(\')|(\-\-)|(\%23)|(#)/i,
+  /(\%3B)|(;)/i,
+  /(union).?(select|all)/i,
+  /(select|update|insert|delete|drop|alter|create|truncate)/i
+  // Additional patterns...
 ];
 function containsSqlInjection(str) {
-if (!str || typeof str !== 'string') return false;
-return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(str));
+  if (!str || typeof str !== 'string') return false;
+  return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(str));
 }
 ```
-
 
 ### 2. Input Validation & Sanitization
 
@@ -514,10 +553,10 @@ Example from `utils/validator.js`:
 
 ```javascript
 function isValidLatitude(lat) {
-return !isNaN(lat) && lat > -90 && lat < 90;
+  return !isNaN(lat) && lat > -90 && lat < 90;
 }
 function isValidLongitude(lng) {
-return !isNaN(lng) && lng > -180 && lng < 180;
+  return !isNaN(lng) && lng > -180 && lng < 180;
 }
 ```
 
@@ -531,11 +570,11 @@ Example from `app.js`:
 ```javascript
 app.use(helmet());
 app.use((req, res, next) => {
-res.setHeader('X-Frame-Options', 'DENY');
-res.setHeader('X-Content-Type-Options', 'nosniff');
-res.setHeader('X-XSS-Protection', '1; mode=block');
-// Additional headers...
-next();
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Additional headers...
+  next();
 });
 ```
 
@@ -548,15 +587,15 @@ Example from `middleware/rateLimit.js`:
 
 ```javascript
 const writeApiLimiter = rateLimit({
-windowMs: 60 60 1000, // 1 hour
-max: 20,
-standardHeaders: true,
-legacyHeaders: false,
-message: {
-success: false,
-message: 'Too many write operations, please try again later.',
-errors: ['Rate limit exceeded for write operations']
-}
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many write operations, please try again later.',
+    errors: ['Rate limit exceeded for write operations']
+  }
 });
 ```
 
@@ -567,13 +606,13 @@ The project includes both unit and integration tests:
 ### Run Tests
 
 ```bash
-
-bash
-Run all tests
+# Run all tests
 npm test
-Run only unit tests
+
+# Run only unit tests
 npm run test:unit
-Run only integration tests
+
+# Run only integration tests
 npm run test:integration
 ```
 
@@ -584,37 +623,68 @@ Unit test for distance calculation:
 ```javascript
 const { expect } = require('chai');
 const DistanceCalculator = require('../../utils/distanceCalculator');
+
 describe('Distance Calculator', () => {
-it('should calculate distance between two points correctly', () => {
-const distance = DistanceCalculator.calculateDistance(40.7128, -74.0060, 34.0522, -118.2437);
-expect(distance).to.be.within(3930, 3950);
-});
-it('should return 0 for the same coordinates', () => {
-const distance = DistanceCalculator.calculateDistance(40.7128, -74.0060, 40.7128, -74.0060);
-expect(distance).to.equal(0);
-});
+  it('should calculate distance between two points correctly', () => {
+    const distance = DistanceCalculator.calculateDistance(40.7128, -74.0060, 34.0522, -118.2437);
+    expect(distance).to.be.within(3930, 3950);
+  });
+
+  it('should return 0 for the same coordinates', () => {
+    const distance = DistanceCalculator.calculateDistance(40.7128, -74.0060, 40.7128, -74.0060);
+    expect(distance).to.equal(0);
+  });
 });
 ```
 
-### Cloud Deployment
+## Deployment
 
-The application can be deployed to various cloud platforms:
+### Deploying to Render
 
-1. **AWS Elastic Beanstalk**
-   - Upload the application as a ZIP file
-   - Configure environment variables in the Elastic Beanstalk console
+This project is deployed on Render, a cloud platform that simplifies the deployment process.
 
-2. **Heroku**
-   ```bash
-   heroku create
-   git push heroku main
-   heroku config:set DB_HOST=your-db-host DB_USER=your-db-user ...
-   ```
 
-3. **Digital Ocean App Platform**
-   - Connect your GitHub repository
-   - Configure environment variables
-   - Select the appropriate Node.js version
+1. **Sign Up and Connect to Render**
+   - Go to [render.com](https://render.com) and sign up for an account
+   - Connect your Git provider (GitHub, GitLab, or Bitbucket)
+   - Grant access to the repository containing your School Management API
+
+2. **Create a New Web Service**
+   - Click "New" and select "Web Service"
+   - Find and select your repository
+   - Give your service a name (e.g., "school-management-api")
+   - Ensure the following settings:
+     - Environment: Node
+     - Build Command: `npm install && npm run build`
+     - Start Command: `npm run start`
+   - Select appropriate instance type (e.g., Free or Starter plan)
+
+3. **Configure Environment Variables**
+   - Scroll down to the "Environment" section
+   - Add all required environment variables:
+     - `PORT`: 10000 (Render will use this internally)
+     - `DB_HOST`: Your MySQL database host
+     - `DB_USER`: Your database username
+     - `DB_PASSWORD`: Your database password
+     - `DB_NAME`: Your database name
+     - `DB_PORT`: Your database port (usually 3306)
+     - `DB_CONNECTION_LIMIT`: 10 (or your preferred value)
+     - `NODE_ENV`: production
+
+4. **Create the Web Service**
+   - Click "Create Web Service"
+   - Render will automatically deploy your application
+   - Monitor the deployment logs for any issues
+
+5. **Access Your API**
+   - Once deployment is complete, your API will be available at the URL provided by Render
+   - The URL will be in the format: `https://school-management-api-m643.onrender.com`
+   - Update your Postman collection's base URL to this new endpoint
+
+6. **Verify Deployment**
+   - Test your API endpoints using the Postman collection
+   - Update the `baseUrl` variable in your Postman environment to the Render URL
+
 
 ## Error Handling
 
@@ -623,15 +693,30 @@ The application implements a centralized error handling system with custom error
 ```javascript
 // middleware/errorHandler.js
 function errorHandler(err, req, res, next) {
-if (err instanceof ValidationError) {
-return res.status(400).json(failure('Validation failed', err.errors));
+
+  if (process.env.NODE_ENV !== 'test') {
+    console.error(err);
+  }
+
+  if (err instanceof ValidationError) {
+    return res.status(400).json(failure('Validation failed', err.errors));
+  }
+
+  if (err instanceof DatabaseError) {
+    return res.status(500).json(failure('Database error', [err.message]));
+  }
+
+  if (err instanceof NotFoundError) {
+    return res.status(404).json(failure(err.message));
+  }
+
+  return res.status(500).json(failure('Internal server error'));
 }
-if (err instanceof DatabaseError) {
-return res.status(500).json(failure('Database error', [err.message]));
-}
-if (err instanceof NotFoundError) {
-return res.status(404).json(failure(err.message));
-}
-return res.status(500).json(failure('Internal server error'));
-}
+
+module.exports = errorHandler;
+
 ```
+
+## Conclusion
+
+This School Management API provides a robust, secure, and scalable solution for managing schools and their locations. It includes comprehensive error handling, input validation, and security measures to protect against common attacks.

@@ -1,0 +1,401 @@
+{
+	"info": {
+		"_postman_id": "2698e680-8f5f-4d60-bfb8-a120c58675d7",
+		"name": "School Management API",
+		"description": "API for managing school data and proximity-based searches",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31369410"
+	},
+	"item": [
+		{
+			"name": "Schools",
+			"item": [
+				{
+					"name": "Add School",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property(\"id\");",
+									"    pm.expect(responseJson.data).to.have.property(\"name\");",
+									"    pm.expect(responseJson.data).to.have.property(\"address\");",
+									"    pm.expect(responseJson.data).to.have.property(\"latitude\");",
+									"    pm.expect(responseJson.data).to.have.property(\"longitude\");",
+									"});",
+									"",
+									"// Store the school ID for future requests",
+									"if (pm.response.json().data && pm.response.json().data.id) {",
+									"    pm.environment.set(\"schoolId\", pm.response.json().data.id);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Example School\",\n  \"address\": \"123 Education Street, City, State\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/addSchool",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"addSchool"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Schools",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.true;",
+									"    pm.expect(responseJson.data).to.have.property(\"schools\");",
+									"    pm.expect(responseJson.data).to.have.property(\"pagination\");",
+									"    pm.expect(responseJson.data.pagination).to.have.property(\"page\");",
+									"    pm.expect(responseJson.data.pagination).to.have.property(\"limit\");",
+									"    pm.expect(responseJson.data.pagination).to.have.property(\"total\");",
+									"    pm.expect(responseJson.data.pagination).to.have.property(\"totalPages\");",
+									"});",
+									"",
+									"pm.test(\"Schools have distance property\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson.data.schools.length > 0) {",
+									"        pm.expect(responseJson.data.schools[0]).to.have.property(\"distance\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/listSchools?latitude=40.7128&longitude=-74.0060",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"listSchools"
+							],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "40.7128"
+								},
+								{
+									"key": "longitude",
+									"value": "-74.0060"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "For school management endpoints"
+		},
+		{
+			"name": "Tests",
+			"item": [
+				{
+					"name": "SQL Injection - School Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should reject SQL injection with 400 status\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message should indicate validation failure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.false;",
+									"    pm.expect(responseJson.errors).to.be.an('array').that.is.not.empty;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"School'; DROP TABLE schools; --\",\n  \"address\": \"123 Test Street\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/addSchool",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"addSchool"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SQL Injection - Query Parameters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should reject SQL injection with 400 status\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message should indicate validation failure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.false;",
+									"    pm.expect(responseJson.errors).to.be.an('array').that.is.not.empty;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/listSchools?latitude=40.7128' OR '1'='1&longitude=-74.0060",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"listSchools"
+							],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "40.7128' OR '1'='1"
+								},
+								{
+									"key": "longitude",
+									"value": "-74.0060"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "XSS-Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should either sanitize or reject XSS\", function () {",
+									"    // Either a 400 rejection or a 201 with sanitized content is acceptable",
+									"    if (pm.response.code === 400) {",
+									"        // Rejected the XSS attempt",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson.success).to.be.false;",
+									"    } else if (pm.response.code === 201) {",
+									"        // Sanitized the XSS attempt",
+									"        const responseJson = pm.response.json();",
+									"        pm.expect(responseJson.success).to.be.true;",
+									"        pm.expect(responseJson.data.name).to.not.include(\"<script>\");",
+									"    } else {",
+									"        pm.expect.fail(\"Response should either reject or sanitize XSS\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"<script>alert('XSS')</script>\",\n  \"address\": \"123 Test Street\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/addSchool",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"addSchool"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Coordinates Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Should reject invalid coordinates with 400 status\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message should mention latitude\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.success).to.be.false;",
+									"    pm.expect(responseJson.errors.join()).to.include(\"Latitude\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Extreme School\",\n  \"address\": \"123 Edge Case Street\",\n  \"latitude\": 91,\n  \"longitude\": -74.0060\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/addSchool",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"addSchool"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pagination-test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Pagination parameters are correct\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.pagination.page).to.equal(2);",
+									"    pm.expect(responseJson.data.pagination.limit).to.equal(5);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/listSchools?latitude=40.7128&longitude=-74.0060&page=2&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"listSchools"
+							],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "40.7128"
+								},
+								{
+									"key": "longitude",
+									"value": "-74.0060"
+								},
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "default"
+		},
+		{
+			"key": "baseUrl",
+			"value": "",
+			"type": "default"
+		}
+	]
+}

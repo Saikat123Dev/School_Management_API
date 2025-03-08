@@ -15,7 +15,8 @@ async function initializeDatabase() {
     host: dbConfig.host,
     port: dbConfig.port,
     user: dbConfig.user,
-    password: dbConfig.password
+    password: dbConfig.password,
+    connectTimeout: 60000
   });
 
   await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);

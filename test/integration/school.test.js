@@ -3,13 +3,26 @@ const { expect } = require('chai');
 const app = require('../../app');
 const { pool, initializeDatabase } = require('../../config/db.config');
 
-describe('School API Integration Tests', () => {
-  before(async () => {
-    await initializeDatabase();
+describe('School API Integration Tests', function() {
+  // Increase the timeout for the entire test suite
+  this.timeout(10000);
+
+  before(async function() {
+    try {
+      await initializeDatabase();
+    } catch (err) {
+      console.error('Database initialization failed:', err);
+      throw err;
+    }
   });
 
-  beforeEach(async () => {
-    await pool.query('DELETE FROM schools');
+  beforeEach(async function() {
+    try {
+      await pool.query('DELETE FROM schools');
+    } catch (err) {
+      console.error('Failed to clean up schools table:', err);
+      throw err;
+    }
   });
 
   describe('POST /api/addSchool', () => {
@@ -50,14 +63,19 @@ describe('School API Integration Tests', () => {
   });
 
   describe('GET /api/listSchools', () => {
-    beforeEach(async () => {
-      // Add test schools
-      await pool.query(`
-        INSERT INTO schools (name, address, latitude, longitude)
-        VALUES
-        ('School A', 'Address A', 40.7128, -74.0060),
-        ('School B', 'Address B', 34.0522, -118.2437)
-      `);
+    beforeEach(async function() {
+      try {
+        // Add test schools
+        await pool.query(`
+          INSERT INTO schools (name, address, latitude, longitude)
+          VALUES
+          ('School A', 'Address A', 40.7128, -74.0060),
+          ('School B', 'Address B', 34.0522, -118.2437)
+        `);
+      } catch (err) {
+        console.error('Failed to insert test schools:', err);
+        throw err;
+      }
     });
 
     it('should list schools sorted by distance', async () => {
@@ -68,7 +86,6 @@ describe('School API Integration Tests', () => {
       expect(res.status).to.equal(200);
       expect(res.body.success).to.be.true;
       expect(res.body.data).to.be.an('array').with.lengthOf(2);
-
       expect(res.body.data[0].name).to.equal('School A');
       expect(res.body.data[0].distance).to.be.lessThan(res.body.data[1].distance);
     });
@@ -84,8 +101,13 @@ describe('School API Integration Tests', () => {
     });
   });
 
-  after(async () => {
-    await pool.query('DELETE FROM schools');
-    await pool.end();
+  after(async function() {
+    try {
+      await pool.query('DELETE FROM schools');
+      await pool.end();
+    } catch (err) {
+      console.error('Failed to clean up and close pool:', err);
+      throw err;
+    }
   });
 });
